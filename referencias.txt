@@ -1,0 +1,2 @@
+https://jcustenborder.github.io/kafka-connect-documentation/projects/kafka-connect-transform-common/transformations/HeaderToField.html
+https://www.confluent.io/blog/kafka-connect-deep-dive-error-handling-dead-letter-queues/
