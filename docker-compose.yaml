@@ -118,6 +118,7 @@ services:
         echo "Installing connector plugins"
         confluent-hub install --no-prompt confluentinc/kafka-connect-s3:10.0.0
         confluent-hub install --no-prompt mdrogalis/voluble:0.3.1
+        confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
         #
         echo "Launching Kafka Connect worker"
         /etc/confluent/docker/run & 

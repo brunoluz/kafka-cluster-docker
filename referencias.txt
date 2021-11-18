@@ -1,2 +1,127 @@
 https://jcustenborder.github.io/kafka-connect-documentation/projects/kafka-connect-transform-common/transformations/HeaderToField.html
 https://www.confluent.io/blog/kafka-connect-deep-dive-error-handling-dead-letter-queues/
+
+
+confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
+
+./kafka-topics --create --topic quickstart-events --bootstrap-server localhost:9092
+./kafka-topics --create --topic quickstart-events-dlq --bootstrap-server localhost:9092
+
+./kafka-topics --delete --topic quickstart-events --bootstrap-server localhost:9092
+./kafka-topics --delete --topic quickstart-events-dlq --bootstrap-server localhost:9092
+
+docker exec -it kafka-connect bash
+docker exec -it broker bash
+docker exec -it kafkacat bash
+
+curl -s http://localhost:8083/connectors/file_sink_01/status
+
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+        "name": "file_sink_01",
+        "config": {
+                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+                "topics":"quickstart-events",
+                "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": false,
+                "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+                "key.converter.schemas.enable": false,
+                "file": "/home/appuser/data/file_sink_01.txt",
+                "transforms" : "headerToField",
+                "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
+                "transforms.headerToField.header.mappings" : "applicationId:STRING",
+                "errors.tolerance": "none"
+                }
+        }'
+
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+        "name": "file_sink_01",
+        "config": {
+                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+                "topics":"quickstart-events",
+                "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": false,
+                "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+                "key.converter.schemas.enable": false,
+                "file": "/home/appuser/data/file_sink_01.txt",
+                "errors.tolerance": "all"
+                }
+        }'
+		
+curl -X DELETE http://localhost:8083/connectors/file_sink_01
+
+
+echo '{"nome": "xyz"}'| kafkacat -b broker:29092 -t quickstart-events -P -H "applicationId=Bruno"
+
+
+echo '{"col_foo":1}'|kafkacat -b broker:29092 -t quickstart-events -P -H applicationId=bar
+
+
+kafkacat -b broker:29092 -t quickstart-events-dlq -C -o-1 -c1 \
+  -f '\nKey (%K bytes): %k
+  Value (%S bytes): %s
+  Timestamp: %T
+  Partition: %p
+  Offset: %o
+  Headers: %h\n'
+  
+  
+echo '{
+  "topic" : "testing",
+  "kafkaPartition" : 1,
+  "valueSchema" : {
+    "type" : "STRUCT",
+    "isOptional" : false,
+    "fieldSchemas" : {
+      "firstName" : {
+        "type" : "STRING",
+        "isOptional" : true
+      },
+      "lastName" : {
+        "type" : "STRING",
+        "isOptional" : true
+      }
+    }
+  },
+  "value" : {
+    "schema" : {
+      "type" : "STRUCT",
+      "isOptional" : false,
+      "fieldSchemas" : {
+        "firstName" : {
+          "type" : "STRING",
+          "isOptional" : true
+        },
+        "lastName" : {
+          "type" : "STRING",
+          "isOptional" : true
+        }
+      }
+    },
+    "fieldValues" : [ {
+      "name" : "firstName",
+      "schema" : {
+        "type" : "STRING",
+        "isOptional" : true
+      },
+      "storage" : "example"
+    }, {
+      "name" : "lastName",
+      "schema" : {
+        "type" : "STRING",
+        "isOptional" : true
+      },
+      "storage" : "user"
+    } ]
+  },
+  "timestamp" : 123412351,
+  "timestampType" : "NO_TIMESTAMP_TYPE",
+  "offset" : 12345,
+  "headers" : [ {
+    "name" : "applicationId",
+    "schema" : {
+      "type" : "STRING",
+      "isOptional" : false
+    },
+    "storage" : "testing"
+  } ]
+}'| kafkacat -b broker:29092 -t quickstart-events -P -H "applicationId=Bruno"
