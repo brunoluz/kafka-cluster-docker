@@ -60,17 +60,14 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
         }'
 
 curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
-        "name": "file_sink_01",
+        "name": "file_sink_02",
         "config": {
                 "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                 "topics":"quickstart-events",
-                "key.converter": "io.confluent.connect.avro.AvroConverter",
-                "key.converter.schema.registry.url": "http://localhost:8081",
-                "key.converter.enhanced.avro.schema.support": "true",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "http://localhost:8081",
-                "value.converter.enhanced.avro.schema.support": "true",
-                "file": "/home/appuser/data/file_sink_01.txt",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "file": "/home/appuser/data/file_sink_02.txt",
                 "transforms" : "headerToField",
                 "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
                 "transforms.headerToField.header.mappings" : "applicationId:STRING",
@@ -78,19 +75,70 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
                 }
         }'
 
+###  S3 SINK ###
+curl -s http://localhost:8083/connectors/s3_sink_03/status
+curl -X DELETE http://localhost:8083/connectors/s3_sink_03
 curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
-        "name": "file_sink_01",
+        "name": "s3_sink_03",
         "config": {
-                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                 "topics":"quickstart-events",
-                "value.converter":"org.apache.kafka.connect.json.JsonConverter",
-                "value.converter.schemas.enable": false,
-                "key.converter":"org.apache.kafka.connect.json.JsonConverter",
-                "key.converter.schemas.enable": false,
-                "file": "/home/appuser/data/file_sink_01.txt",
-                "errors.tolerance": "all"
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "io.confluent.connect.avro.AvroConverter",
+                "value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter.enhanced.avro.schema.support": "true",
+                "timestamp.extractor": "Record",
+                "rotate.schedule.interval.ms": "86400000",
+                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+                "flush.size": "3",
+                "s3.bucket.name": "meu-bucket-123",
+                "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
+                "timezone": "America/Sao_Paulo",
+                "avro.codec": "snappy",
+                "topics.dir": "ft9",
+                "s3.region": "sa-east-1",
+                "tasks.max": "1",
+                "locale": "pt"
                 }
         }'
+
+
+###  S3 SINK ###
+curl -s http://localhost:8083/connectors/s3_sink_04/status
+curl -X DELETE http://localhost:8083/connectors/s3_sink_04
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+        "name": "s3_sink_04",
+        "config": {
+                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+                "topics":"quickstart-events",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "io.confluent.connect.avro.AvroConverter",
+                "value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter.enhanced.avro.schema.support": "true",
+                "timestamp.extractor": "Record",
+                "rotate.schedule.interval.ms": "86400000",
+                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+                "flush.size": "3",
+                "s3.bucket.name": "meu-bucket-123",
+                "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
+                "timezone": "America/Sao_Paulo",
+                "avro.codec": "snappy",
+                "topics.dir": "transformado",
+                "s3.region": "sa-east-1",
+                "tasks.max": "1",
+                "locale": "pt",
+                "transforms" : "headerToField",
+                "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
+                "transforms.headerToField.header.mappings" : "applicationId:STRING",
+                "errors.tolerance": "none"
+                }
+        }'
+
+
 		
 
 ##### KAFKACAT #####
@@ -127,3 +175,10 @@ kafka-avro-console-producer --topic quickstart-events --bootstrap-server broker:
 {"id": "1", "nome": "bruno2"}
 
 curl -X GET http://localhost:8081/subjects
+
+
+
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data '{"schema": "{  \"namespace\": \"io.confluent.examples.clients.basicavro\",  \"type\": \"record\",  \"name\": \"Payment\",  \"fields\": [    {\"name\": \"id\", \"type\": \"string\"},    {\"name\": \"nome\", \"type\": \"string\"}  ]}"}' \
+  http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
