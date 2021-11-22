@@ -97,15 +97,16 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
                 "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
                 "timezone": "America/Sao_Paulo",
                 "avro.codec": "snappy",
-                "topics.dir": "ft9",
+                "topics.dir": "conector-padrao",
                 "s3.region": "sa-east-1",
                 "tasks.max": "1",
-                "locale": "pt"
+                "locale": "pt",
+                "store.kafka.keys": "true"
                 }
         }'
 
 
-###  S3 SINK ###
+###  S3 SINK COM ADICAO DE HEADER ###
 curl -s http://localhost:8083/connectors/s3_sink_04/status
 curl -X DELETE http://localhost:8083/connectors/s3_sink_04
 curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
