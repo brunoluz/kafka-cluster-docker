@@ -27,7 +27,8 @@ def send_record():
     key = str(uuid.uuid4())
     value = json.loads('{"id": "1", "nome": "brunoxxxx"}')
 
-    producer.produce(topic="quickstart-events", key=key, value=value, headers=[('applicationId', 'aiaiai')])
+    producer.produce(topic="quickstart-events", key=key, value=value,
+                     headers=[('applicationId', 'valor applicationid'), ('transactionId', 'valor transactionId')])
 
     producer.flush()
 

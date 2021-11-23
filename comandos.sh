@@ -101,9 +101,8 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
                 "s3.region": "sa-east-1",
                 "tasks.max": "1",
                 "locale": "pt",
-                "store.kafka.keys": "true"
-                }
-        }'
+                "store.kafka.headers": "true"
+        }}'
 
 
 ###  S3 SINK COM ADICAO DE HEADER ###
@@ -134,10 +133,9 @@ curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json
                 "locale": "pt",
                 "transforms" : "headerToField",
                 "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
-                "transforms.headerToField.header.mappings" : "applicationId:STRING",
+                "transforms.headerToField.header.mappings" : "applicationId:STRING,transactionId:STRING",
                 "errors.tolerance": "none"
-                }
-        }'
+        }}'
 
 
 		
@@ -180,6 +178,6 @@ curl -X GET http://localhost:8081/subjects
 
 
 
-curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
-  --data '{"schema": "{  \"namespace\": \"io.confluent.examples.clients.basicavro\",  \"type\": \"record\",  \"name\": \"Payment\",  \"fields\": [    {\"name\": \"id\", \"type\": \"string\"},    {\"name\": \"nome\", \"type\": \"string\"}  ]}"}' \
-  http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
+        curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+        --data '{"schema": "{  \"namespace\": \"io.confluent.examples.clients.basicavro\",  \"type\": \"record\",  \"name\": \"Payment\",  \"fields\": [    {\"name\": \"id\", \"type\": \"string\"},    {\"name\": \"nome\", \"type\": \"string\"}  ]}"}' \
+        http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
