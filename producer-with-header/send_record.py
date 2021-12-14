@@ -1,8 +1,17 @@
 import json
+import random
+import string
 import uuid
+from random import randrange
 
 from confluent_kafka.avro import AvroProducer
 from confluent_kafka import avro
+
+
+def random_json():
+    i = randrange(1000)
+    x = ''.join(random.sample(string.ascii_lowercase, 10))
+    return '{"id": "' + str(i) + '", "nome": "' + x + '"}'
 
 
 def load_avro_schema_from_file(schema_file):
@@ -25,7 +34,7 @@ def send_record():
     producer = AvroProducer(producer_config, default_key_schema=key_schema, default_value_schema=value_schema)
 
     key = str(uuid.uuid4())
-    value = json.loads('{"id": "1", "nome": "brunoxxxx"}')
+    value = json.loads(random_json())
 
     producer.produce(topic="quickstart-events", key=key, value=value,
                      headers=[('applicationId', 'valor applicationid'), ('transactionId', 'valor transactionId')])

@@ -99,8 +99,8 @@ services:
       # You can either specify your AWS credentials here and uncomment it, or by 
       #  editing the local aws_credentials.env file. If you use the `environment` option then
       #  comment out the mounting of `aws_credentials.env` under `volumes` below to avoid confusion
-      AWS_ACCESS_KEY_ID: ""
-      AWS_SECRET_ACCESS_KEY: ""
+      AWS_ACCESS_KEY_ID: 
+      AWS_SECRET_ACCESS_KEY: 
       #
       # If you want to use the Confluent Hub installer to d/l component, but make them available
       # when running this offline, spin up the stack once and then run : 
