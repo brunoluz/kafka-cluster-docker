@@ -10,16 +10,14 @@ cd /bin
 
 #### SCHEMA REGISTRY ####
 
+ curl -X DELETE http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions/2
+
 curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
     --data '{"compatibility": "BACKWARD"}' \
     http://localhost:8081/config
 
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
 --data '{"schema": "{  \"namespace\": \"io.confluent.examples.clients.basicavro\",  \"type\": \"record\",  \"name\": \"Payment\",  \"fields\": [    {\"name\": \"id\", \"type\": \"string\"},    {\"name\": \"nome\", \"type\": \"string\"}  ]}"}' \
-http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
-
-curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
---data '{"schema": "{ \"namespace\": \"io.confluent.examples.clients.basicavro\", \"type\": \"record\", \"name\": \"Payment\", \"fields\": [ { \"name\": \"id\", \"type\": \"string\" }, { \"name\": \"nome\", \"type\": \"string\" }, { \"name\": \"sobrenome\", \"type\": [ \"null\", \"string\" ], \"default\": null } ]}"}' \
 http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
 
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
