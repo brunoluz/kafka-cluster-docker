@@ -1,0 +1,61 @@
+
+
+
+##### KAFKA BROKER #####
+# entrar no container
+docker exec -it broker bash
+cd /bin
+./kafka-topics --create --topic quickstart-events --bootstrap-server localhost:9092
+./kafka-topics --delete --topic quickstart-events --bootstrap-server localhost:9092
+
+#### SCHEMA REGISTRY ####
+
+curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+    --data '{"compatibility": "BACKWARD"}' \
+    http://localhost:8081/config
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+--data '{"schema": "{  \"namespace\": \"io.confluent.examples.clients.basicavro\",  \"type\": \"record\",  \"name\": \"Payment\",  \"fields\": [    {\"name\": \"id\", \"type\": \"string\"},    {\"name\": \"nome\", \"type\": \"string\"}  ]}"}' \
+http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+--data '{"schema": "{ \"namespace\": \"io.confluent.examples.clients.basicavro\", \"type\": \"record\", \"name\": \"Payment\", \"fields\": [ { \"name\": \"id\", \"type\": \"string\" }, { \"name\": \"nome\", \"type\": \"string\" }, { \"name\": \"sobrenome\", \"type\": [ \"null\", \"string\" ], \"default\": null } ]}"}' \
+http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+--data '{"schema": "{\"namespace\": \"io.confluent.examples.clients.basicavro\",\"type\": \"record\",\"name\": \"Payment\",\"fields\": [{\"name\": \"id\",\"type\": \"string\"}, {\"name\": \"nome\",\"type\": \"string\"}, {\"name\": \"sobrenome\",\"type\": \"string\",\"default\": \"x\"}]}"}' \
+http://localhost:8081/subjects/quickstart-events-io.confluent.examples.clients.basicavro.Payment/versions
+
+curl -s http://localhost:8083/connectors/s3_sink_04/status
+curl -X DELETE http://localhost:8083/connectors/s3_sink_04
+curl -X POST http://localhost:8083/connectors -H "Content-Type: application/json" -d '{
+        "name": "s3_sink_04",
+        "config": {
+                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+                "topics":"quickstart-events",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "io.confluent.connect.avro.AvroConverter",
+                "value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter.enhanced.avro.schema.support": "true",
+                "timestamp.extractor": "Record",
+                "rotate.schedule.interval.ms": "86400000",
+                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+                "flush.size": "4",
+                "s3.bucket.name": "meu-bucket-123",
+                "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
+                "timezone": "America/Sao_Paulo",
+                "avro.codec": "snappy",
+                "topics.dir": "conector-padrao",
+                "s3.region": "sa-east-1",
+                "tasks.max": "1",
+                "locale": "pt",
+                "store.kafka.headers": "false",
+                "schema.compatibility": "BACKWARD"
+        }}'
+
+#### AWS S3 COMMANDS ####
+aws s3 ls s3://meu-bucket-123/conector-padrao/quickstart-events/year=2023/month=06/day=03/
+aws s3 rm s3://meu-bucket-123/conector-padrao/quickstart-events/year=2023/month=06/day=03/ --include "*.avro" --recursive
+aws s3 cp s3://meu-bucket-123/conector-padrao/quickstart-events/year=2023/month=06/day=03/ . --include "*.avro" --recursive
